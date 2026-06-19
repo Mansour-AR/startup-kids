@@ -191,6 +191,10 @@
   .takeaway{background:var(--soft);border-left:4px solid var(--brand);border-radius:10px;padding:12px 14px;margin:10px 0;font-size:14px}
   .reflect textarea{width:100%;min-height:80px;border:2px solid var(--line);border-radius:12px;padding:12px;font-family:inherit;font-size:14px}
   .footnote{font-size:12px;color:var(--muted);margin-top:8px}
+  /* step-wizard chrome is hidden by default (desktop shows the full list) */
+  #stepNav{display:none}
+  .steplabel{display:none}
+
   /* ============================================================
      MOBILE: make it feel like an installed native app
      ============================================================ */
@@ -213,9 +217,9 @@
     }
     #screen-intro{border-radius:0;min-height:calc(100dvh - env(safe-area-inset-top));}
 
-    /* sticky app bar on the game screen */
+    /* app bar on the game screen — scrolls with the page (NOT sticky) */
     #appHeader{
-      position:sticky; top:0; z-index:30;
+      position:static;
       background:linear-gradient(160deg,#1e3a8a,#6d28d9);
       box-shadow:0 4px 14px rgba(15,23,42,.3)!important;
       padding:10px 14px!important;
@@ -247,6 +251,39 @@
     .btn{min-height:48px}
     .biz{padding:16px 10px}
 
+    /* ----- step-by-step wizard flow (one selection per screen) ----- */
+    .stepmode #weekDesc{display:none}
+    .stepmode .actionbar{display:none}                 /* replaced by step nav */
+    .stepmode #decisions .decision{display:none; border:none; padding:4px 0; margin:0}
+    .stepmode #decisions .decision.step-active{display:block; animation:stepIn .25s ease}
+    .stepmode #decisions .decision .opts{grid-template-columns:1fr} /* big, tappable rows */
+    .stepmode #decisions .decision .opt{padding:15px 14px}
+    .stepmode #decisions .decision .opt .t{font-size:15px}
+    .stepmode #decisions .decision .opt .d{font-size:13px}
+    .stepmode .decision .head h3{font-size:19px}
+    .stepmode .decision .q{font-size:14px}
+
+    .stepmode .steplabel{display:block;font-size:12px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--brand);margin-bottom:6px}
+    .review-item{display:flex;justify-content:space-between;gap:10px;padding:12px 4px;border-bottom:1px solid var(--line);font-size:14px}
+    .review-item b{color:var(--ink)}
+    .review-item span{color:var(--brand-2);font-weight:700;text-align:right}
+
+    #stepNav{display:none}
+    .stepmode #stepNav{
+      display:flex; align-items:center; gap:10px;
+      position:sticky; bottom:0; z-index:25;
+      margin:14px -16px calc(-20px - env(safe-area-inset-bottom));
+      padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+      background:linear-gradient(to top, rgba(255,255,255,.98) 75%, rgba(255,255,255,0));
+    }
+    #stepBack{padding:15px 16px; min-width:56px; line-height:1}
+    #stepBack:disabled{opacity:.3}
+    #stepNext{flex:1; padding:16px; font-size:16px; border-radius:14px}
+    .stepdots{display:flex; gap:7px; justify-content:center}
+    .stepdots i{width:8px;height:8px;border-radius:50%;background:var(--line);transition:.2s}
+    .stepdots i.done{background:var(--brand-2)}
+    .stepdots i.on{background:var(--brand);transform:scale(1.4)}
+
     /* results modal slides up like a bottom sheet */
     .overlay{align-items:flex-end; padding:0}
     .modal{
@@ -258,6 +295,7 @@
     .modal .btn{width:100%;padding:16px;font-size:16px}
   }
   @keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  @keyframes stepIn{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
 </style>
 </head>
 <body>
@@ -333,12 +371,17 @@
     <div id="lessonBox"></div>
     <div id="eventBox"></div>
     <h2 id="weekTitle">Week 1 — Plan your week</h2>
-    <p style="color:var(--muted);margin-top:0">
+    <p id="weekDesc" style="color:var(--muted);margin-top:0">
       Make a choice in each card below, then run your week. Tap the <b>i</b> for the real-business idea behind each choice.
     </p>
     <div id="decisions"></div>
     <div class="center actionbar" style="margin-top:6px">
       <button id="runBtn" class="btn" disabled>Run Week ▶</button>
+    </div>
+    <div id="stepNav">
+      <button id="stepBack" class="btn secondary">←</button>
+      <div class="stepdots" id="stepDots"></div>
+      <button id="stepNext" class="btn" disabled>Next →</button>
     </div>
   </div>
 </section>
@@ -682,6 +725,12 @@ function renderDecisions(){
 
   $("decisions").innerHTML = html;
 
+  // restore any previous selections (e.g. after a layout switch)
+  Object.entries(S.pending).forEach(([k,v])=>{
+    const o=document.querySelector(`.opt[data-key="${k}"][data-val="${v}"]`);
+    if(o) o.classList.add("sel");
+  });
+
   // wire option clicks
   document.querySelectorAll(".opt").forEach(o=>{
     o.onclick = ()=>{
@@ -690,6 +739,13 @@ function renderDecisions(){
       o.classList.add("sel");
       S.pending[k]=o.dataset.val;
       checkRunReady();
+      // in the step wizard, picking an answer auto-advances to the next step
+      if(document.body.classList.contains("stepmode")){
+        const card=o.closest(".decision");
+        const idx=stepCards.indexOf(card);
+        refreshStepNav();
+        if(idx===stepIdx) setTimeout(()=>goToStep(stepIdx+1), 260);
+      }
     };
   });
   // wire info tap (mobile)
@@ -701,6 +757,7 @@ function renderDecisions(){
   document.body.addEventListener("click",()=>document.querySelectorAll(".info").forEach(x=>x.classList.remove("show")),{once:true});
 
   checkRunReady();
+  layoutDecisions();   // choose full-list (desktop) vs step wizard (mobile)
 }
 
 function requiredCards(){
@@ -712,6 +769,135 @@ function requiredCards(){
 function checkRunReady(){
   $("runBtn").disabled = !requiredCards().every(k=>S.pending[k]);
 }
+
+/* ============================================================
+   STEP-BY-STEP WIZARD (mobile) — one selection per screen
+   ============================================================ */
+const isMobile = ()=>window.matchMedia("(max-width:700px)").matches;
+let stepCards=[];     // the .decision nodes, in order
+let stepIdx=0;        // current step (== stepCards.length means the Review step)
+
+function layoutDecisions(){
+  if(isMobile()) enterStepMode(); else exitStepMode();
+}
+
+function exitStepMode(){
+  document.body.classList.remove("stepmode");
+  document.querySelectorAll("#decisions .decision").forEach(c=>c.classList.remove("step-active"));
+  const rv=$("reviewPanel"); if(rv) rv.remove();
+  $("lessonBox").style.display=""; $("eventBox").style.display="";   // restore for desktop view
+  $("weekTitle").textContent=`Week ${S.week} — Plan your week`;
+}
+
+function enterStepMode(){
+  document.body.classList.add("stepmode");
+  const oldRv=$("reviewPanel"); if(oldRv) oldRv.remove();   // never treat review as a step card
+  stepCards=Array.from(document.querySelectorAll("#decisions .decision"));
+  // a step-counter label at the top of each card
+  stepCards.forEach((c,i)=>{
+    if(!c.querySelector(".steplabel")){
+      const l=document.createElement("div");
+      l.className="steplabel";
+      l.textContent=`Step ${i+1} of ${stepCards.length+1}`;
+      c.insertBefore(l, c.firstChild);
+    }
+  });
+  // jump to the first unanswered step so partial progress is kept
+  const firstOpen=stepCards.findIndex(c=>!S.pending[firstOptKey(c)]);
+  stepIdx = firstOpen<0 ? stepCards.length : firstOpen;
+  goToStep(stepIdx);
+}
+
+// the data-key a given decision card controls
+function firstOptKey(card){
+  const o=card.querySelector(".opt"); return o?o.dataset.key:null;
+}
+
+function goToStep(i){
+  const total=stepCards.length;          // decision steps; review = index === total
+  stepIdx=Math.max(0, Math.min(i, total));
+
+  // lesson + event banners only appear on the very first step
+  const onFirst = stepIdx===0;
+  $("lessonBox").style.display = onFirst ? "" : "none";
+  $("eventBox").style.display  = onFirst ? "" : "none";
+
+  // show only the active decision card
+  stepCards.forEach((c,idx)=>c.classList.toggle("step-active", idx===stepIdx));
+
+  // build / toggle the Review step
+  let rv=$("reviewPanel");
+  if(stepIdx===total){
+    if(!rv){ rv=document.createElement("div"); rv.id="reviewPanel"; rv.className="decision"; $("decisions").appendChild(rv); }
+    rv.innerHTML = reviewHTML(total);
+    rv.classList.add("step-active");
+    $("weekTitle").textContent = `Week ${S.week} — Ready to go?`;
+  } else {
+    if(rv) rv.remove();
+    $("weekTitle").textContent = `Week ${S.week} — Plan your week`;
+  }
+
+  refreshStepNav();
+  window.scrollTo({top:0, behavior:"smooth"});   // each step starts at the top, app-style
+}
+
+function reviewHTML(total){
+  const labelFor=(key,val)=>{
+    const map={price:PRICE,marketing:MARKETING,invest:INVEST,time:TIME,service:SERVICE};
+    if(key==="partner") return val==="yes"?"Team up 🤝":"Go solo";
+    return (map[key] && map[key][val] && map[key][val].label) || val;
+  };
+  const titles={price:"💲 Price",marketing:"📣 Marketing",invest:"🏦 Money",time:"⚡ Time",service:"🙋 Customer",partner:"🤝 Partner"};
+  const rows=requiredCards().map(k=>
+    `<div class="review-item"><b>${titles[k]||k}</b><span>${S.pending[k]?labelFor(k,S.pending[k]):"—"}</span></div>`
+  ).join("");
+  return `<div class="steplabel">Step ${total+1} of ${total+1} · Review</div>
+    <div class="head"><h3>Review your week</h3></div>
+    <div class="q">Here's your plan for Week ${S.week}. Tap Back to change anything, or run the week!</div>
+    ${rows}`;
+}
+
+function refreshStepNav(){
+  const total=stepCards.length;
+  const onReview = stepIdx===total;
+
+  // progress dots
+  const dots=$("stepDots"); dots.innerHTML="";
+  for(let i=0;i<=total;i++){
+    const d=document.createElement("i");
+    d.className = i===stepIdx?"on":(i<stepIdx?"done":"");
+    dots.appendChild(d);
+  }
+
+  // back button
+  $("stepBack").disabled = stepIdx===0;
+
+  // next / run button
+  const next=$("stepNext");
+  if(onReview){
+    next.textContent="Run Week ▶";
+    next.disabled = !requiredCards().every(k=>S.pending[k]);
+  } else {
+    const key=firstOptKey(stepCards[stepIdx]);
+    const answered = !!S.pending[key];
+    next.textContent = stepIdx===total-1 ? "Review →" : "Next →";
+    next.disabled = !answered;
+  }
+}
+
+$("stepBack").onclick = ()=>goToStep(stepIdx-1);
+$("stepNext").onclick = ()=>{
+  if(stepIdx===stepCards.length) runWeek();   // on the review step
+  else goToStep(stepIdx+1);
+};
+
+// keep the right layout if the device is rotated / resized
+let _wasMobile=isMobile();
+window.addEventListener("resize", ()=>{
+  if($("screen-game").classList.contains("hidden")) return;
+  const now=isMobile();
+  if(now!==_wasMobile){ _wasMobile=now; layoutDecisions(); }
+});
 
 /* ============================================================
    RUN THE WEEK — the simulation
