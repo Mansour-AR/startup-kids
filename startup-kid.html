@@ -2,8 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Startup Kid — Build Your Summer Business</title>
+<!-- Installable web-app (Add to Home Screen → opens fullscreen like a native app) -->
+<meta name="theme-color" content="#4f46e5" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Startup Kid" />
+<link id="appleIcon" rel="apple-touch-icon" />
+<link id="favicon" rel="icon" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
   :root{
@@ -27,8 +35,11 @@
     font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
     color:var(--ink);
     background:linear-gradient(160deg,#1e3a8a 0%,#6d28d9 60%,#db2777 130%);
+    background-attachment:fixed;
     min-height:100vh;
     padding:18px;
+    overscroll-behavior-y:none;
+    -webkit-text-size-adjust:100%;
   }
   .wrap{max-width:980px;margin:0 auto}
   .card{
@@ -180,10 +191,73 @@
   .takeaway{background:var(--soft);border-left:4px solid var(--brand);border-radius:10px;padding:12px 14px;margin:10px 0;font-size:14px}
   .reflect textarea{width:100%;min-height:80px;border:2px solid var(--line);border-radius:12px;padding:12px;font-family:inherit;font-size:14px}
   .footnote{font-size:12px;color:var(--muted);margin-top:8px}
-  @media(max-width:560px){
-    body{padding:10px}
-    .card{padding:16px}
+  /* ============================================================
+     MOBILE: make it feel like an installed native app
+     ============================================================ */
+  @media(max-width:700px){
+    body{
+      padding:0;
+      /* fill the device, respect notches / home indicator */
+      min-height:100vh; min-height:100dvh;
+      padding-top:env(safe-area-inset-top);
+      -webkit-tap-highlight-color:transparent;
+    }
+    .wrap{max-width:100%;}
+
+    /* full-bleed app panels with a soft "sheet" top */
+    .card{
+      border-radius:20px 20px 0 0;
+      box-shadow:none;
+      padding:18px 16px calc(20px + env(safe-area-inset-bottom));
+      margin:0 0 -8px;            /* sheets overlap slightly */
+    }
+    #screen-intro{border-radius:0;min-height:calc(100dvh - env(safe-area-inset-top));}
+
+    /* sticky app bar on the game screen */
+    #appHeader{
+      position:sticky; top:0; z-index:30;
+      background:linear-gradient(160deg,#1e3a8a,#6d28d9);
+      box-shadow:0 4px 14px rgba(15,23,42,.3)!important;
+      padding:10px 14px!important;
+      border-radius:0;
+      margin:0 0 8px;
+    }
+    #appHeader .topbar{margin-bottom:4px}
+    #appHeader .progress{width:120px!important}
+
+    /* tighter, touch-friendly grids */
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .skills{grid-template-columns:repeat(2,1fr)}
+    .stat .v{font-size:20px}
+    .opts{grid-template-columns:1fr 1fr}
+    .opt{padding:11px 12px}
+    .opt .t{font-size:13px}
+
+    /* sticky bottom call-to-action bar, like a real app */
+    .actionbar{
+      position:sticky; bottom:0; z-index:25;
+      margin:14px -16px calc(-20px - env(safe-area-inset-bottom));
+      padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+      background:linear-gradient(to top, rgba(255,255,255,.98) 70%, rgba(255,255,255,0));
+    }
+    .actionbar .btn{width:100%; padding:16px; font-size:16px; border-radius:14px}
+
+    /* bigger touch targets, app-style headings */
+    h1{font-size:28px}
+    .btn{min-height:48px}
+    .biz{padding:16px 10px}
+
+    /* results modal slides up like a bottom sheet */
+    .overlay{align-items:flex-end; padding:0}
+    .modal{
+      border-radius:22px 22px 0 0;
+      max-height:88vh;
+      padding:20px 18px calc(20px + env(safe-area-inset-bottom));
+      animation:sheetUp .28s ease;
+    }
+    .modal .btn{width:100%;padding:16px;font-size:16px}
   }
+  @keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 </style>
 </head>
 <body>
@@ -227,14 +301,14 @@
     <input id="bizName" type="text" maxlength="28" placeholder="e.g. Sunny Squeeze, Pup Patrol, Pixel Studio…" />
   </div>
 
-  <div class="center" style="margin-top:22px">
+  <div class="center actionbar" style="margin-top:22px">
     <button id="startBtn" class="btn" disabled>Start my summer →</button>
   </div>
 </section>
 
 <!-- ============ GAME ============ -->
 <section id="screen-game" class="hidden">
-  <div class="card" style="background:transparent;box-shadow:none;padding:0">
+  <div id="appHeader" class="card" style="background:transparent;box-shadow:none;padding:0">
     <div class="topbar">
       <div class="biz-id">
         <span class="emoji" id="hdrEmoji">🍋</span>
@@ -263,7 +337,7 @@
       Make a choice in each card below, then run your week. Tap the <b>i</b> for the real-business idea behind each choice.
     </p>
     <div id="decisions"></div>
-    <div class="center" style="margin-top:6px">
+    <div class="center actionbar" style="margin-top:6px">
       <button id="runBtn" class="btn" disabled>Run Week ▶</button>
     </div>
   </div>
@@ -907,6 +981,42 @@ $("restartBtn").onclick=()=>{
   $("reflectBox").value="";
   show("screen-intro");
 };
+
+/* ============================================================
+   PWA: app icon + web manifest so it installs to the home screen
+   and launches fullscreen like a native app (no browser chrome)
+   ============================================================ */
+(function setupApp(){
+  // Rocket-on-gradient app icon, drawn as an inline SVG (no external files)
+  const icon = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+    <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2563eb"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs>
+    <rect width="512" height="512" rx="115" fill="url(#g)"/>
+    <text x="256" y="350" font-size="270" text-anchor="middle">🚀</text>
+    <text x="256" y="452" font-size="64" font-family="Arial,sans-serif" font-weight="700"
+      text-anchor="middle" fill="#ffffff">Startup Kid</text></svg>`;
+  const iconUrl = "data:image/svg+xml," + encodeURIComponent(icon);
+  const ai=document.getElementById("appleIcon"); if(ai) ai.href=iconUrl;
+  const fv=document.getElementById("favicon");   if(fv) fv.href=iconUrl;
+
+  // Web App Manifest (standalone = opens like a real app when added to home screen)
+  const manifest = {
+    name:"Startup Kid", short_name:"Startup Kid",
+    description:"Build a summer micro-business and learn how money works.",
+    start_url:".", scope:".", display:"standalone", orientation:"portrait",
+    background_color:"#1e3a8a", theme_color:"#4f46e5",
+    icons:[
+      {src:iconUrl, sizes:"512x512", type:"image/svg+xml", purpose:"any maskable"},
+      {src:iconUrl, sizes:"192x192", type:"image/svg+xml", purpose:"any maskable"},
+    ],
+  };
+  try{
+    const blob=new Blob([JSON.stringify(manifest)],{type:"application/manifest+json"});
+    const link=document.createElement("link");
+    link.rel="manifest"; link.href=URL.createObjectURL(blob);
+    document.head.appendChild(link);
+  }catch(e){/* manifest is a progressive enhancement; ignore if blocked */}
+})();
 
 /* ============================================================
    INIT
