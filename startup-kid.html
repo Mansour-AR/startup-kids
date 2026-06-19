@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Startup Kid — Build Your Summer Business</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0f172a;
+    --panel:#ffffff;
+    --ink:#1e293b;
+    --muted:#64748b;
+    --brand:#2563eb;
+    --brand-2:#7c3aed;
+    --good:#16a34a;
+    --warn:#d97706;
+    --bad:#dc2626;
+    --soft:#f1f5f9;
+    --line:#e2e8f0;
+    --shadow:0 10px 30px rgba(15,23,42,.12);
+    --radius:18px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+    color:var(--ink);
+    background:linear-gradient(160deg,#1e3a8a 0%,#6d28d9 60%,#db2777 130%);
+    min-height:100vh;
+    padding:18px;
+  }
+  .wrap{max-width:980px;margin:0 auto}
+  .card{
+    background:var(--panel);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:22px;
+  }
+  h1,h2,h3{margin:0 0 .4em}
+  h1{font-size:clamp(26px,5vw,40px);letter-spacing:-.5px}
+  .tag{
+    display:inline-block;background:rgba(255,255,255,.18);color:#fff;
+    padding:6px 14px;border-radius:999px;font-weight:600;font-size:13px;
+    margin-bottom:14px;backdrop-filter:blur(4px);
+  }
+  .lede{color:var(--ink);font-size:16px;line-height:1.5;max-width:680px}
+  .btn{
+    cursor:pointer;border:none;border-radius:12px;padding:13px 22px;
+    font-size:15px;font-weight:700;color:#fff;
+    background:linear-gradient(135deg,var(--brand),var(--brand-2));
+    box-shadow:0 6px 16px rgba(37,99,235,.35);transition:transform .08s ease,filter .15s;
+  }
+  .btn:hover{filter:brightness(1.07)}
+  .btn:active{transform:translateY(1px)}
+  .btn:disabled{opacity:.45;cursor:not-allowed;filter:none}
+  .btn.secondary{background:#fff;color:var(--brand);border:2px solid var(--brand);box-shadow:none}
+  .btn.ghost{background:rgba(255,255,255,.15);box-shadow:none}
+  .center{text-align:center}
+  .hidden{display:none!important}
+
+  /* ---------- Business picker ---------- */
+  .grid{display:grid;gap:14px}
+  .biz-grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-top:18px}
+  .biz{
+    border:2px solid var(--line);border-radius:16px;padding:18px 14px;text-align:center;
+    cursor:pointer;background:var(--soft);transition:.15s;
+  }
+  .biz:hover{border-color:var(--brand);transform:translateY(-3px)}
+  .biz.sel{border-color:var(--brand);background:#eff6ff;box-shadow:0 0 0 3px rgba(37,99,235,.18)}
+  .biz .emoji{font-size:40px;display:block;margin-bottom:8px}
+  .biz .nm{font-weight:700;font-size:15px}
+  .biz .desc{font-size:12px;color:var(--muted);margin-top:4px}
+  .welcome{
+    margin-top:20px;background:linear-gradient(135deg,#eff6ff,#f5f3ff);
+    border:1px solid var(--line);border-radius:16px;padding:18px 20px;
+  }
+  .welcome p{color:var(--ink);line-height:1.55;font-size:15px}
+  .welcome .how{list-style:none;margin:10px 0 14px;padding:0}
+  .welcome .how li{
+    background:#fff;border:1px solid var(--line);border-radius:12px;
+    padding:10px 14px;margin-bottom:8px;font-size:14px;line-height:1.45;
+  }
+  .field{margin-top:18px}
+  .field label{display:block;font-weight:700;margin-bottom:6px}
+  .field input{
+    width:100%;padding:12px 14px;border:2px solid var(--line);border-radius:12px;font-size:15px;
+  }
+
+  /* ---------- Dashboard ---------- */
+  .topbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+  .biz-id{display:flex;align-items:center;gap:12px}
+  .biz-id .emoji{font-size:34px}
+  .biz-id .nm{font-weight:800;font-size:18px;line-height:1.1}
+  .biz-id .sub{font-size:12px;color:#e0e7ff}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:8px}
+  .stat{background:#fff;border-radius:14px;padding:12px 14px;box-shadow:var(--shadow)}
+  .stat .k{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+  .stat .v{font-size:22px;font-weight:800;margin-top:2px}
+  .bar{height:8px;background:var(--soft);border-radius:999px;margin-top:8px;overflow:hidden}
+  .bar > i{display:block;height:100%;border-radius:999px;transition:width .4s}
+  .progress{display:flex;gap:6px;margin:6px 0 16px}
+  .progress .wk{
+    flex:1;height:10px;border-radius:999px;background:rgba(255,255,255,.25);
+  }
+  .progress .wk.done{background:#fff}
+  .progress .wk.cur{background:#fde047}
+
+  .skills{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:8px}
+  .skill{background:#fff;border-radius:14px;padding:10px 12px;box-shadow:var(--shadow)}
+  .skill .nm{font-size:12px;font-weight:700;color:var(--ink);display:flex;justify-content:space-between}
+  .skill .lvl{color:var(--brand-2)}
+  .pips{display:flex;gap:4px;margin-top:6px}
+  .pips i{flex:1;height:7px;border-radius:3px;background:var(--soft)}
+  .pips i.on{background:linear-gradient(135deg,var(--brand),var(--brand-2))}
+
+  /* ---------- Decision cards ---------- */
+  .lesson{
+    background:linear-gradient(135deg,#ecfeff,#eef2ff);border:1px solid #a5b4fc;border-left:5px solid #6366f1;
+    border-radius:14px;padding:14px 16px;margin:0 0 14px;display:flex;gap:12px;align-items:flex-start;
+  }
+  .lesson .ic{font-size:26px;flex:0 0 auto}
+  .lesson .lesson-tag{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#4f46e5;margin-bottom:3px}
+  .lesson p{margin:0;font-size:14px;line-height:1.5;color:var(--ink)}
+  .event{
+    background:#fffbeb;border:2px dashed #f59e0b;border-radius:14px;padding:14px 16px;margin:6px 0 16px;
+    display:flex;gap:12px;align-items:flex-start;
+  }
+  .event .ic{font-size:26px}
+  .event.good{background:#ecfdf5;border-color:#10b981}
+  .event.bad{background:#fef2f2;border-color:#ef4444}
+  .event h3{margin:0 0 2px;font-size:16px}
+  .event p{margin:0;font-size:14px;color:var(--ink)}
+
+  .decision{border:2px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px;background:#fff}
+  .decision .head{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+  .decision .head h3{margin:0;font-size:16px}
+  .decision .q{font-size:13px;color:var(--muted);margin-bottom:12px}
+  .opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  .opt{
+    border:2px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;background:var(--soft);
+    transition:.12s;position:relative;
+  }
+  .opt:hover{border-color:var(--brand)}
+  .opt.sel{border-color:var(--brand);background:#eff6ff;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+  .opt .t{font-weight:700;font-size:14px}
+  .opt .d{font-size:12px;color:var(--muted);margin-top:3px}
+  .opt .cost{font-size:11px;font-weight:700;margin-top:6px;color:var(--warn)}
+  .info{
+    margin-left:auto;width:20px;height:20px;border-radius:50%;background:var(--brand);color:#fff;
+    font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;cursor:help;flex:0 0 auto;
+    position:relative;
+  }
+  .info .tip{
+    display:none;position:absolute;right:0;top:26px;width:230px;background:var(--ink);color:#fff;
+    padding:10px 12px;border-radius:10px;font-size:12px;font-weight:500;line-height:1.4;z-index:20;
+    box-shadow:var(--shadow);
+  }
+  .info:hover .tip,.info.show .tip{display:block}
+
+  /* ---------- Modal / results ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(15,23,42,.6);display:flex;align-items:center;justify-content:center;
+    padding:18px;z-index:50;
+  }
+  .modal{max-width:560px;width:100%;max-height:90vh;overflow:auto}
+  .ledger{width:100%;border-collapse:collapse;margin:10px 0}
+  .ledger td{padding:7px 4px;border-bottom:1px solid var(--line);font-size:14px}
+  .ledger td:last-child{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+  .delta{font-size:13px;font-weight:700}
+  .up{color:var(--good)}.down{color:var(--bad)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+  .chip{background:var(--soft);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:600}
+
+  /* ---------- Debrief ---------- */
+  .ending-banner{border-radius:16px;padding:18px;color:#fff;margin-bottom:16px}
+  .tier-thriving{background:linear-gradient(135deg,#059669,#10b981)}
+  .tier-steady{background:linear-gradient(135deg,#2563eb,#7c3aed)}
+  .tier-tough{background:linear-gradient(135deg,#d97706,#db2777)}
+  .takeaway{background:var(--soft);border-left:4px solid var(--brand);border-radius:10px;padding:12px 14px;margin:10px 0;font-size:14px}
+  .reflect textarea{width:100%;min-height:80px;border:2px solid var(--line);border-radius:12px;padding:12px;font-family:inherit;font-size:14px}
+  .footnote{font-size:12px;color:var(--muted);margin-top:8px}
+  @media(max-width:560px){
+    body{padding:10px}
+    .card{padding:16px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ============ INTRO / SETUP ============ -->
+<section id="screen-intro" class="card">
+  <span class="tag">🚀 A summer business simulation • ages 10–16</span>
+  <h1>Startup Kid</h1>
+  <p class="lede">
+    It's the first day of summer break and you have <b>$50</b> of birthday and allowance money.
+    Over <b>8 weeks</b> you'll start a tiny business, set your prices, get customers, and handle
+    whatever the summer throws at you. Can you turn $50 into a profit — and a few new skills?
+  </p>
+
+  <!-- Welcome / how-to-play starter -->
+  <div class="welcome">
+    <h2 style="margin-top:0">👋 Welcome, future founder!</h2>
+    <p>
+      Ever dreamed of running your own business? This is your chance to try it — no risk, all fun.
+      You'll be a young entrepreneur on summer break with one simple mission: take a small bit of
+      money and grow it into something bigger by being smart, creative, and brave.
+    </p>
+    <p style="margin-bottom:0"><b>Here's how it works:</b></p>
+    <ul class="how">
+      <li>🗓️ <b>Play 8 weeks.</b> Each week you make a few choices, then watch how your business does.</li>
+      <li>🤔 <b>Every choice matters.</b> Your price, marketing, spending, and energy all change what happens — there's no single "right" answer.</li>
+      <li>🎲 <b>Expect surprises.</b> Rain, rivals, rave reviews, and lucky breaks can hit any week, just like in real life.</li>
+      <li>📈 <b>Level up 4 real skills:</b> Pricing, Marketing, Customer Service, and Money Management.</li>
+      <li>💡 <b>You can't really lose.</b> Even a tough week teaches you something — that's how every entrepreneur starts.</li>
+    </ul>
+    <p style="margin-bottom:0;font-weight:700;color:var(--brand)">Ready? Pick an idea below and let's build your business! 🚀</p>
+  </div>
+
+  <h2 style="margin-top:22px">1. Pick your business idea</h2>
+  <p style="color:var(--muted);margin-top:0">There's no "best" choice — each one has its own ups and downs.</p>
+  <div id="bizGrid" class="grid biz-grid"></div>
+
+  <div class="field">
+    <label for="bizName">2. Name your business</label>
+    <input id="bizName" type="text" maxlength="28" placeholder="e.g. Sunny Squeeze, Pup Patrol, Pixel Studio…" />
+  </div>
+
+  <div class="center" style="margin-top:22px">
+    <button id="startBtn" class="btn" disabled>Start my summer →</button>
+  </div>
+</section>
+
+<!-- ============ GAME ============ -->
+<section id="screen-game" class="hidden">
+  <div class="card" style="background:transparent;box-shadow:none;padding:0">
+    <div class="topbar">
+      <div class="biz-id">
+        <span class="emoji" id="hdrEmoji">🍋</span>
+        <div>
+          <div class="nm" id="hdrName">My Business</div>
+          <div class="sub" id="hdrType">Lemonade stand</div>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div style="color:#fff;font-weight:800;font-size:18px" id="hdrWeek">Week 1 of 8</div>
+        <div class="progress" id="progress" style="width:180px"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:14px">
+    <div class="stats" id="stats"></div>
+    <div class="skills" id="skills"></div>
+  </div>
+
+  <div class="card">
+    <div id="lessonBox"></div>
+    <div id="eventBox"></div>
+    <h2 id="weekTitle">Week 1 — Plan your week</h2>
+    <p style="color:var(--muted);margin-top:0">
+      Make a choice in each card below, then run your week. Tap the <b>i</b> for the real-business idea behind each choice.
+    </p>
+    <div id="decisions"></div>
+    <div class="center" style="margin-top:6px">
+      <button id="runBtn" class="btn" disabled>Run Week ▶</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DEBRIEF ============ -->
+<section id="screen-debrief" class="hidden">
+  <div class="card">
+    <div id="endingBanner" class="ending-banner">
+      <h1 id="endingTitle" style="color:#fff">Your summer recap</h1>
+      <p id="endingText" style="margin:0;font-size:16px;line-height:1.5"></p>
+    </div>
+
+    <div class="stats" id="finalStats"></div>
+
+    <h2 style="margin-top:22px">Your skills this summer</h2>
+    <p style="color:var(--muted);margin-top:0">Every choice you made built one of these four entrepreneur skills.</p>
+    <div style="max-width:460px;margin:0 auto"><canvas id="skillChart"></canvas></div>
+
+    <h2 style="margin-top:24px">What you learned</h2>
+    <div id="takeaways"></div>
+
+    <div class="reflect" style="margin-top:18px">
+      <h3>One last thing 💭</h3>
+      <label for="reflectBox" style="font-weight:700">What would you do differently next time?</label>
+      <textarea id="reflectBox" placeholder="Type your idea here… (just for you)"></textarea>
+    </div>
+
+    <div class="center" style="margin-top:22px">
+      <button id="restartBtn" class="btn">🔁 Start a new business</button>
+      <p class="footnote">Every entrepreneur runs more than one business in their life. Try a different idea or strategy!</p>
+    </div>
+  </div>
+</section>
+
+</div>
+
+<script>
+/* ============================================================
+   STARTUP KID  —  data + game logic
+   ============================================================ */
+
+// ---- Business definitions (price = standard price, cost = supply cost per sale) ----
+const BUSINESSES = {
+  lemonade: {emoji:"🍋", name:"Lemonade stand",  desc:"Classic summer cash",      price:1.5, cost:0.5, outdoor:true,  base:18},
+  crafts:   {emoji:"📿", name:"Custom bracelets",desc:"Handmade crafts to sell",  price:5,   cost:1.5, outdoor:false, base:11},
+  pets:     {emoji:"🐕", name:"Dog walking",     desc:"Pet care for neighbors",   price:10,  cost:0.5, outdoor:true,  base:8},
+  baking:   {emoji:"🧁", name:"Baked goods",     desc:"Cookies & treats",         price:3,   cost:1.0, outdoor:false, base:13},
+  yard:     {emoji:"🌱", name:"Yard work",       desc:"Mowing & cleanup",         price:15,  cost:1.0, outdoor:true,  base:6},
+  digital:  {emoji:"🎨", name:"Digital art",     desc:"Designs sold online*",     price:8,   cost:0.0, outdoor:false, base:9},
+  carwash:  {emoji:"🚗", name:"Car washing",     desc:"Sparkle for the driveway", price:7,   cost:1.0, outdoor:true,  base:9},
+  tutoring: {emoji:"📚", name:"Homework helper", desc:"Tutor younger kids",       price:9,   cost:0.0, outdoor:false, base:7},
+  plants:   {emoji:"🪴", name:"Plant seedlings", desc:"Grow & sell little plants",price:4,   cost:1.5, outdoor:true,  base:10},
+  techhelp: {emoji:"📱", name:"Tech helper",     desc:"Set up phones & devices",  price:12,  cost:0.0, outdoor:false, base:6},
+  candles:  {emoji:"🕯️", name:"Candles & soap",  desc:"Handmade home goods",      price:6,   cost:2.0, outdoor:false, base:10},
+  photo:    {emoji:"📷", name:"Photo & video",   desc:"Shoot pics for families*", price:20,  cost:0.5, outdoor:false, base:5},
+};
+
+// ---- Price levels: multiplier on price, factor on number of customers ----
+const PRICE = {
+  budget:   {label:"Budget price",  mult:0.7, demand:1.4, sat:+2, tip:"Lower prices usually attract MORE customers, but each sale earns less. The math of 'price vs. how many you sell' is called break-even thinking."},
+  standard: {label:"Standard price",mult:1.0, demand:1.0, sat:0,  tip:"A middle price balances how much you earn per sale with how many people buy. Most businesses test prices to find this sweet spot."},
+  premium:  {label:"Premium price", mult:1.4, demand:0.62,sat:-3, tip:"Higher prices mean bigger profit per sale, but fewer customers. It works best when people feel your product is extra special (high value)."},
+};
+
+// ---- Marketing options ----
+const MARKETING = {
+  word:   {label:"Word of mouth", cash:0, energy:12, reach:1.12, tip:"Telling friends and neighbors is free but takes time and energy. Happy customers who refer others are a business's best advertising."},
+  flyers: {label:"Make flyers",   cash:5, energy:6,  reach:1.28, tip:"Flyers cost a little money to reach lots of people at once. This is 'paid marketing' — you spend money hoping to earn more back."},
+  online: {label:"Online post*",  cash:8, energy:4,  reach:1.55, tip:"With a parent's help, an online post can reach the most people for a higher cost. Big reach can mean big results — or wasted money if it doesn't sell."},
+  skip:   {label:"No marketing",  cash:0, energy:0,  reach:0.78, tip:"Saving money by not marketing keeps cash in your pocket, but fewer people learn you exist. Sometimes resting is smart; often it costs you sales."},
+};
+
+// ---- Reinvest vs save ----
+const INVEST = {
+  reinvest:{label:"Reinvest $10",  cash:10, cap:5, sat:+5, tip:"Spending profit to buy better supplies grows what your business can do (more capacity, happier customers). This is 'reinvesting for growth'."},
+  save:    {label:"Save the cash", cash:0,  cap:0, sat:0,  tip:"Keeping cash builds a safety cushion and moves you toward a goal. Saving is safer but your business grows slower. Growth vs. saving is a real tradeoff."},
+};
+
+// ---- Time / energy management ----
+const TIME = {
+  hustle:  {label:"Hustle harder", energy:-26, cap:8, sat:-4, tip:"Extra hours can mean more sales now, but they drain your energy and time for friends and family. Too much hustle leads to burnout."},
+  balanced:{label:"Stay balanced", energy:-8,  cap:0, sat:+2, tip:"Splitting time between business, school stuff, and rest keeps you steady. Balance is how real founders last for the long run."},
+  rest:    {label:"Rest & recharge",energy:+22,cap:-4,sat:+5, tip:"Choosing rest lowers sales this week but refills your energy and happiness. Knowing when to slow down is a real business skill."},
+};
+
+// ---- Customer-problem options (used when that event appears) ----
+const SERVICE = {
+  generous:{label:"Say yes, no fuss", cash:-4, sat:+10, tip:"Giving a refund or discount costs money now but builds loyalty and great word of mouth. Generous service can pay off later."},
+  negotiate:{label:"Find a fair deal",cash:-1, sat:+4,  tip:"Meeting in the middle keeps the customer happy AND protects your money. Negotiation is a core business skill."},
+  firm:    {label:"Politely say no",  cash:0,  sat:-8,  tip:"Standing firm protects your profit, but an unhappy customer may not return or may tell others. Sometimes it's the right call — choose wisely."},
+};
+
+// ---- Random events (rolled ~1 per week from week 2 on) ----
+const EVENTS = [
+  {id:"rain",   weight:3, kind:"bad",  outdoorOnly:true, ic:"🌧️", title:"Rainy day!", text:"Bad weather kept customers away this week.", factor:0.6},
+  {id:"review", weight:3, kind:"good", ic:"⭐", title:"Glowing review!", text:"A happy customer raved about you — referrals are up.", factor:1.2, sat:+8},
+  {id:"spike",  weight:2, kind:"bad",  ic:"📈", title:"Supply costs spiked", text:"Your supplies got more expensive this week.", costMult:1.6},
+  {id:"rival",  weight:2, kind:"bad",  ic:"🏪", title:"A rival appeared", text:"Another kid started a competing business nearby.", factor:0.75},
+  {id:"news",   weight:2, kind:"good", ic:"📰", title:"Newsletter feature!", text:"The community newsletter featured you. Reputation boost!", factor:1.25, sat:+5},
+  {id:"partner",weight:2, kind:"choice", ic:"🤝", title:"A friend wants in", text:"A friend offers to help in exchange for a share of the profits."},
+  {id:"problem",weight:3, kind:"choice", ic:"🙋", title:"A customer has a request", text:"A customer asks for a discount on a slightly imperfect order."},
+];
+
+// ---- Weekly business curriculum: one real concept per week (Wk1 → Wk8) ----
+const LESSONS = [
+  {term:"Capital",       ic:"💰", text:"The money you start with is your <b>capital</b>. Your $50 buys supplies and gets you going — every founder begins by putting capital to work."},
+  {term:"Profit Margin", ic:"📊", text:"<b>Profit margin</b> is what you keep from each sale after costs. Price − cost = your margin. A higher price OR a lower cost both grow it."},
+  {term:"Customer Acquisition", ic:"📣", text:"Getting people to find you is <b>customer acquisition</b>. Marketing costs time or money, but with no customers there's no business."},
+  {term:"Break-even",    ic:"⚖️", text:"<b>Break-even</b> is the moment your sales finally cover all your costs. After that point, every extra sale is pure profit."},
+  {term:"Cash Flow",     ic:"🌊", text:"<b>Cash flow</b> is money moving in and out. You can be profitable but still run low on cash if you spend too fast — keep a reserve."},
+  {term:"Reinvestment",  ic:"🌱", text:"Putting profit back into your business to grow it is <b>reinvestment</b>. More capacity can mean more sales — if the demand is really there."},
+  {term:"Reputation",    ic:"⭐", text:"Your <b>reputation</b> is what customers say about you. Happy customers bring referrals — free new customers. Loyalty beats a quick one-time sale."},
+  {term:"Scaling",       ic:"🚀", text:"<b>Scaling</b> means growing bigger without falling apart. As summer ends, ask: could this run all year? That's how small ideas become real businesses."},
+];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let S;
+function freshState(){
+  return {
+    business:null, name:"", week:1,
+    cash:50, satisfaction:50, energy:100, capacity:20,
+    // skill points (level = floor(pts/3), capped at 5)
+    skills:{pricing:0, marketing:0, service:0, money:0},
+    tally:{budget:0,standard:0,premium:0,word:0,flyers:0,online:0,skip:0,
+           reinvest:0,save:0,hustle:0,balanced:0,rest:0,
+           generous:0,negotiate:0,firm:0,partnerYes:0,partnerNo:0,profit:0,bestWeek:-99},
+    partner:false,
+    event:null,          // this week's event object
+    pending:{},          // this week's selections {price, marketing, invest, time, service?, partner?}
+    history:[],
+  };
+}
+const skillLevel = pts => Math.min(5, Math.floor(pts/3));
+const clamp = (n,lo,hi)=>Math.max(lo,Math.min(hi,n));
+const money = n => (n<0?"-$":"$")+Math.abs(n).toFixed(2).replace(/\.00$/,"");
+
+/* ============================================================
+   SCREEN HELPERS
+   ============================================================ */
+const $ = id => document.getElementById(id);
+function show(screen){
+  ["screen-intro","screen-game","screen-debrief"].forEach(s=>$(s).classList.add("hidden"));
+  $(screen).classList.remove("hidden");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+/* ============================================================
+   SETUP SCREEN
+   ============================================================ */
+function buildPicker(){
+  const g = $("bizGrid"); g.innerHTML="";
+  Object.entries(BUSINESSES).forEach(([key,b])=>{
+    const d = document.createElement("div");
+    d.className="biz"; d.dataset.key=key;
+    d.innerHTML = `<span class="emoji">${b.emoji}</span><div class="nm">${b.name}</div><div class="desc">${b.desc}</div>`;
+    d.onclick = ()=>{
+      document.querySelectorAll(".biz").forEach(x=>x.classList.remove("sel"));
+      d.classList.add("sel");
+      g.dataset.sel = key;
+      checkReady();
+    };
+    g.appendChild(d);
+  });
+  $("bizName").addEventListener("input", checkReady);
+}
+function checkReady(){
+  const ok = $("bizGrid").dataset.sel && $("bizName").value.trim().length>0;
+  $("startBtn").disabled = !ok;
+}
+$("startBtn").onclick = ()=>{
+  S = freshState();
+  S.business = $("bizGrid").dataset.sel;
+  S.name = $("bizName").value.trim();
+  startWeek();
+  show("screen-game");
+};
+
+/* ============================================================
+   DASHBOARD RENDER
+   ============================================================ */
+function renderDashboard(){
+  const b = BUSINESSES[S.business];
+  $("hdrEmoji").textContent=b.emoji;
+  $("hdrName").textContent=S.name;
+  $("hdrType").textContent=b.name + (S.partner?" • 🤝 partner":"");
+  $("hdrWeek").textContent=`Week ${S.week} of 8`;
+
+  // progress pips
+  const p=$("progress"); p.innerHTML="";
+  for(let i=1;i<=8;i++){
+    const w=document.createElement("div");
+    w.className="wk"+(i<S.week?" done":i===S.week?" cur":"");
+    p.appendChild(w);
+  }
+
+  // stats
+  const energyColor = S.energy<30?"var(--bad)":S.energy<60?"var(--warn)":"var(--good)";
+  const satColor = S.satisfaction<35?"var(--bad)":S.satisfaction<65?"var(--warn)":"var(--good)";
+  $("stats").innerHTML = `
+    <div class="stat"><div class="k">💵 Cash</div><div class="v">${money(S.cash)}</div></div>
+    <div class="stat"><div class="k">😊 Satisfaction</div><div class="v">${Math.round(S.satisfaction)}</div>
+      <div class="bar"><i style="width:${S.satisfaction}%;background:${satColor}"></i></div></div>
+    <div class="stat"><div class="k">⚡ Energy</div><div class="v">${Math.round(S.energy)}</div>
+      <div class="bar"><i style="width:${S.energy}%;background:${energyColor}"></i></div></div>
+    <div class="stat"><div class="k">📦 Capacity</div><div class="v">${S.capacity}<span style="font-size:12px;color:var(--muted)"> sales/wk</span></div></div>
+  `;
+
+  // skills
+  const names={pricing:"💲 Pricing",marketing:"📣 Marketing",service:"🤝 Customer Service",money:"🏦 Money Mgmt"};
+  $("skills").innerHTML = Object.entries(names).map(([k,label])=>{
+    const lvl=skillLevel(S.skills[k]);
+    let pips="";for(let i=0;i<5;i++)pips+=`<i class="${i<lvl?"on":""}"></i>`;
+    return `<div class="skill"><div class="nm"><span>${label}</span><span class="lvl">Lv ${lvl}</span></div><div class="pips">${pips}</div></div>`;
+  }).join("");
+}
+
+/* ============================================================
+   WEEK SETUP — roll event + build decision cards
+   ============================================================ */
+function rollEvent(){
+  if(S.week===1) return null;          // gentle first week
+  const b=BUSINESSES[S.business];
+  const pool=EVENTS.filter(e=>!(e.outdoorOnly && !b.outdoor));
+  // 20% chance of a calm week
+  if(Math.random()<0.2) return null;
+  const total=pool.reduce((s,e)=>s+e.weight,0);
+  let r=Math.random()*total;
+  for(const e of pool){ r-=e.weight; if(r<=0) return e; }
+  return pool[0];
+}
+
+function startWeek(){
+  S.event = rollEvent();
+  S.pending = {};
+  renderDashboard();
+  renderLesson();
+  renderEvent();
+  renderDecisions();
+  $("weekTitle").textContent = `Week ${S.week} — Plan your week`;
+}
+
+function renderLesson(){
+  const L=LESSONS[S.week-1];
+  $("lessonBox").innerHTML = `<div class="lesson">
+    <span class="ic">${L.ic}</span>
+    <div><div class="lesson-tag">Lesson ${S.week} of 8 · ${L.term}</div><p>${L.text}</p></div>
+  </div>`;
+}
+
+function renderEvent(){
+  const box=$("eventBox");
+  if(!S.event){ box.innerHTML=""; return; }
+  const e=S.event;
+  const cls = e.kind==="good"?"good":e.kind==="bad"?"bad":"";
+  box.innerHTML = `<div class="event ${cls}"><span class="ic">${e.ic}</span>
+    <div><h3>${e.title}</h3><p>${e.text}</p></div></div>`;
+}
+
+// build a decision card
+function card(key, title, q, options){
+  const opts = options.map(o=>`
+    <div class="opt" data-key="${key}" data-val="${o.val}">
+      <div class="t">${o.t}</div>
+      <div class="d">${o.d}</div>
+      ${o.cost?`<div class="cost">${o.cost}</div>`:""}
+    </div>`).join("");
+  return `<div class="decision">
+    <div class="head"><h3>${title}</h3>
+      <span class="info" data-tip="${title}">i<span class="tip">${q.tip}</span></span></div>
+    <div class="q">${q.text}</div>
+    <div class="opts">${opts}</div>
+  </div>`;
+}
+
+function renderDecisions(){
+  const b=BUSINESSES[S.business];
+  let html="";
+
+  // 1. PRICING
+  html += card("price","💲 Set your price",
+    {text:"How will you price your "+b.name.toLowerCase()+" this week?",
+     tip:"Real businesses balance margin (profit per sale) against volume (how many they sell). Finding that balance is break-even thinking."},
+    [
+      {val:"budget",  t:PRICE.budget.label,  d:money(b.price*PRICE.budget.mult)+" each • more customers", cost:""},
+      {val:"standard",t:PRICE.standard.label,d:money(b.price)+" each • balanced", cost:""},
+      {val:"premium", t:PRICE.premium.label, d:money(b.price*PRICE.premium.mult)+" each • fewer customers", cost:""},
+    ]);
+
+  // 2. MARKETING
+  html += card("marketing","📣 Spread the word",
+    {text:"How will you get customers this week?",
+     tip:"Marketing is how customers find you. Each method trades money, time, and reach differently."},
+    [
+      {val:"word",  t:MARKETING.word.label,  d:"Tell friends & neighbors", cost:"Costs ⚡12 energy"},
+      {val:"flyers",t:MARKETING.flyers.label,d:"Reach lots of people", cost:"Costs $5"},
+      {val:"online",t:MARKETING.online.label,d:"Biggest reach (parent helps)", cost:"Costs $8"},
+      {val:"skip",  t:MARKETING.skip.label,  d:"Save money & energy", cost:"Free"},
+    ]);
+
+  // 3. REINVEST vs SAVE
+  html += card("invest","🏦 Money move",
+    {text:"You have a little cash. What now?",
+     tip:"Spending on your business can grow it (reinvesting); keeping cash builds savings. Growth vs. saving is a constant business tradeoff."},
+    [
+      {val:"reinvest",t:INVEST.reinvest.label,d:"Better supplies: +capacity, happier customers", cost:"Costs $10"},
+      {val:"save",    t:INVEST.save.label,    d:"Build your cash cushion & goal", cost:"Free"},
+    ]);
+
+  // 4. TIME / ENERGY
+  html += card("time","⚡ Time & energy",
+    {text:"Summer also has chores, friends, and family. How hard do you push?",
+     tip:"Your time is limited. Spending it all on work earns more now but causes burnout — balancing it is opportunity cost in action."},
+    [
+      {val:"hustle",  t:TIME.hustle.label,  d:"More sales now, big energy cost", cost:"Costs ⚡26 energy"},
+      {val:"balanced",t:TIME.balanced.label,d:"Steady and sustainable", cost:"Costs ⚡8 energy"},
+      {val:"rest",    t:TIME.rest.label,    d:"Recharge: fewer sales, more energy", cost:"+⚡22 energy"},
+    ]);
+
+  // 5. EVENT-DRIVEN extra card
+  if(S.event && S.event.id==="problem"){
+    html += card("service","🙋 Handle the customer",
+      {text:"A customer wants a discount on a slightly imperfect order. What do you do?",
+       tip:"How you treat customers shapes your reputation. Great service builds loyalty; protecting profit matters too. Negotiation balances both."},
+      [
+        {val:"generous", t:SERVICE.generous.label, d:"Happiest customer", cost:"Costs ~$4"},
+        {val:"negotiate",t:SERVICE.negotiate.label,d:"Fair for both", cost:"Costs ~$1"},
+        {val:"firm",     t:SERVICE.firm.label,     d:"Protects your profit", cost:"Free"},
+      ]);
+  }
+  if(S.event && S.event.id==="partner"){
+    html += card("partner","🤝 Partnership offer",
+      {text:"A friend offers to help every week in exchange for 30% of your profit. Team up?",
+       tip:"Partners add help and capacity but share the rewards. Giving up some profit for growth and support is a real founder decision."},
+      [
+        {val:"yes",t:"Team up",  d:"+capacity & energy help, but share 30% of profit", cost:"30% of profit"},
+        {val:"no", t:"Go solo",  d:"Keep all profit, all the work", cost:"Free"},
+      ]);
+  }
+
+  $("decisions").innerHTML = html;
+
+  // wire option clicks
+  document.querySelectorAll(".opt").forEach(o=>{
+    o.onclick = ()=>{
+      const k=o.dataset.key;
+      document.querySelectorAll(`.opt[data-key="${k}"]`).forEach(x=>x.classList.remove("sel"));
+      o.classList.add("sel");
+      S.pending[k]=o.dataset.val;
+      checkRunReady();
+    };
+  });
+  // wire info tap (mobile)
+  document.querySelectorAll(".info").forEach(i=>{
+    i.onclick=(e)=>{e.stopPropagation();
+      document.querySelectorAll(".info").forEach(x=>{if(x!==i)x.classList.remove("show")});
+      i.classList.toggle("show");};
+  });
+  document.body.addEventListener("click",()=>document.querySelectorAll(".info").forEach(x=>x.classList.remove("show")),{once:true});
+
+  checkRunReady();
+}
+
+function requiredCards(){
+  const req=["price","marketing","invest","time"];
+  if(S.event && S.event.id==="problem") req.push("service");
+  if(S.event && S.event.id==="partner") req.push("partner");
+  return req;
+}
+function checkRunReady(){
+  $("runBtn").disabled = !requiredCards().every(k=>S.pending[k]);
+}
+
+/* ============================================================
+   RUN THE WEEK — the simulation
+   ============================================================ */
+$("runBtn").onclick = runWeek;
+
+function runWeek(){
+  const b=BUSINESSES[S.business];
+  const p=S.pending;
+  const ev=S.event;
+  const before={cash:S.cash,sat:S.satisfaction,energy:S.energy};
+
+  // ---- apply partnership decision (persistent) ----
+  if(p.partner==="yes"){ S.partner=true; S.tally.partnerYes++; S.skills.money+=1; }
+  if(p.partner==="no"){ S.tally.partnerNo++; }
+
+  // ---- spend marketing / invest / service money & energy ----
+  let spend=0, energyDelta=0, satDelta=0, capBonus=0;
+
+  // marketing
+  const m=MARKETING[p.marketing];
+  spend += m.cash; energyDelta -= m.energy;
+  S.tally[p.marketing]++;
+  if(p.marketing!=="skip") S.skills.marketing+=1;
+  if(p.marketing==="word") S.skills.service+=1; // talking to customers builds service
+
+  // invest
+  const inv=INVEST[p.invest];
+  spend += inv.cash; S.capacity += inv.cap; satDelta += inv.sat;
+  S.tally[p.invest]++; S.skills.money+=1;
+
+  // time
+  const t=TIME[p.time];
+  energyDelta += t.energy; capBonus += t.cap; satDelta += t.sat;
+  S.tally[p.time]++;
+
+  // pricing (always builds pricing skill)
+  const pr=PRICE[p.price];
+  satDelta += pr.sat; S.tally[p.price]++; S.skills.pricing+=1;
+
+  // service event
+  if(p.service){
+    const sv=SERVICE[p.service];
+    spend += (sv.cash<0 ? -sv.cash : 0); // generous/negotiate cost money
+    satDelta += sv.sat; S.tally[p.service]++; S.skills.service+=1;
+  }
+
+  // event passive effects
+  let salesFactor = 1;
+  let costMult = 1;
+  if(ev){
+    if(ev.factor) salesFactor *= ev.factor;
+    if(ev.costMult) costMult *= ev.costMult;
+    if(ev.sat) satDelta += ev.sat;
+  }
+
+  // apply energy & satisfaction now (so energyFactor uses updated energy)
+  S.energy = clamp(S.energy + energyDelta, 0, 100);
+  S.satisfaction = clamp(S.satisfaction + satDelta, 0, 100);
+
+  // ---- compute customers ----
+  const satFactor = 0.6 + (S.satisfaction/100)*0.8;          // 0.6 .. 1.4
+  const energyFactor = S.energy>=60?1.0 : S.energy>=30?0.86 : 0.7;
+  const mktSkillBonus = 1 + skillLevel(S.skills.marketing)*0.04;
+  const priceSkillBonus = 1 + skillLevel(S.skills.pricing)*0.02;
+
+  let demand = b.base * pr.demand * m.reach * satFactor * energyFactor
+               * mktSkillBonus * priceSkillBonus * salesFactor;
+
+  // capacity (partner adds capacity & cushions energy penalty)
+  let cap = S.capacity + capBonus + (S.partner?6:0);
+  let customers = Math.max(0, Math.round(demand));
+  const wantedMore = customers > cap;
+  customers = Math.min(customers, cap);
+
+  // ---- money ----
+  const unitPrice = b.price * pr.mult;
+  const unitCost  = b.cost * costMult;
+  const revenue = customers * unitPrice;
+  const supplyCost = customers * unitCost;
+  let grossProfit = revenue - supplyCost - spend;
+
+  // partner profit share (only on positive profit)
+  let partnerCut=0;
+  if(S.partner && grossProfit>0){ partnerCut = grossProfit*0.30; }
+  const netProfit = grossProfit - partnerCut;
+
+  S.cash += netProfit;
+  S.tally.profit += netProfit;
+  if(netProfit > S.tally.bestWeek) S.tally.bestWeek=netProfit;
+
+  // small satisfaction nudge from selling out / no sales
+  if(customers===0){ S.satisfaction=clamp(S.satisfaction-5,0,100); }
+
+  // record
+  S.history.push({week:S.week,customers,revenue,netProfit,event:ev?ev.id:null});
+
+  showResults({before,customers,unitPrice,unitCost,revenue,supplyCost,spend,partnerCut,netProfit,wantedMore,cap});
+}
+
+/* ============================================================
+   RESULTS MODAL
+   ============================================================ */
+function showResults(r){
+  const dSat = Math.round(S.satisfaction - r.before.sat);
+  const dEnergy = Math.round(S.energy - r.before.energy);
+  const profitColor = r.netProfit>=0?"up":"down";
+  const margin = r.unitPrice>0 ? Math.round((r.unitPrice - r.unitCost)/r.unitPrice*100) : 0;
+  const marginColor = margin>=50?"up":margin>=25?"":"down";
+  const overlay=document.createElement("div");
+  overlay.className="overlay";
+  overlay.innerHTML=`
+    <div class="card modal">
+      <h2>Week ${S.week} results</h2>
+      <div class="chips">
+        <span class="chip">🧑‍🤝‍🧑 ${r.customers} customer${r.customers===1?"":"s"}</span>
+        ${r.wantedMore?`<span class="chip">📦 Sold out! (capacity ${r.cap})</span>`:""}
+        <span class="chip ${dSat>=0?"up":"down"}">😊 ${dSat>=0?"+":""}${dSat}</span>
+        <span class="chip ${dEnergy>=0?"up":"down"}">⚡ ${dEnergy>=0?"+":""}${dEnergy}</span>
+      </div>
+      <table class="ledger">
+        <tr><td>Sales (${r.customers} × ${money(r.unitPrice)})</td><td class="up">${money(r.revenue)}</td></tr>
+        <tr><td>Supply costs</td><td class="down">-${money(r.supplyCost)}</td></tr>
+        <tr><td>Profit margin per sale <span style="color:var(--muted)">(price − cost)</span></td><td class="${marginColor}">${margin}%</td></tr>
+        <tr><td>Marketing / reinvest / service</td><td class="down">-${money(r.spend)}</td></tr>
+        ${r.partnerCut>0?`<tr><td>Partner's 30% share</td><td class="down">-${money(r.partnerCut)}</td></tr>`:""}
+        <tr><td><b>Week profit</b></td><td class="${profitColor}"><b>${money(r.netProfit)}</b></td></tr>
+        <tr><td><b>Cash on hand</b></td><td><b>${money(S.cash)}</b></td></tr>
+      </table>
+      <p style="font-size:13px;color:var(--muted)">${coachLine(r)}</p>
+      <div class="center" style="margin-top:8px">
+        <button class="btn" id="nextBtn">${S.week>=8?"See my summer recap →":"Next week ▶"}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  $("nextBtn").onclick=()=>{
+    overlay.remove();
+    if(S.week>=8){ debrief(); }
+    else { S.week++; startWeek(); }
+  };
+}
+
+// a friendly cause-and-effect coaching line
+function coachLine(r){
+  if(r.customers===0) return "No sales this week — try lowering your price or marketing more so people find you.";
+  if(r.wantedMore) return "You sold out! Reinvesting in capacity could let you serve even more customers next time.";
+  if(r.netProfit<0) return "You spent more than you earned this week. Check whether your price covers your costs (break-even).";
+  if(S.pending.price==="budget") return "Low prices brought customers in — just make sure each sale still earns enough.";
+  if(S.pending.price==="premium") return "Premium pricing means fewer buyers but more profit each. Keep customers feeling the value!";
+  return "Nice, steady week. Small profits add up over a summer.";
+}
+
+/* ============================================================
+   DEBRIEF
+   ============================================================ */
+function debrief(){
+  show("screen-debrief");
+  const avgSkill = (skillLevel(S.skills.pricing)+skillLevel(S.skills.marketing)
+                    +skillLevel(S.skills.service)+skillLevel(S.skills.money))/4;
+
+  // ---- outcome tier ----
+  let tier,title,text,cls;
+  if(S.cash>=100 && S.satisfaction>=60 && avgSkill>=3){
+    tier="thriving"; cls="tier-thriving";
+    title="🌟 Thriving Entrepreneur — Ready for Next Level!";
+    text=`You grew your $50 into ${money(S.cash)} with happy customers and strong skills. You've got the makings of a real founder. When school starts, you'll be ready to grow even bigger!`;
+  } else if(S.cash<25){
+    tier="tough"; cls="tier-tough";
+    title="💪 Tough Lesson — Every Entrepreneur Fails First";
+    text=`This summer was hard on the wallet (you finished with ${money(S.cash)}), but that's how almost every famous founder started. You discovered what doesn't work — and that's priceless. Run it back and try a new strategy!`;
+  } else {
+    tier="steady"; cls="tier-steady";
+    title="📈 Steady Learner — You Learned a Lot!";
+    text=`You finished with ${money(S.cash)} and a real feel for running a business. You broke even or made a modest profit and leveled up some solid skills. That's a great foundation to build on.`;
+  }
+  $("endingBanner").className="ending-banner "+cls;
+  $("endingTitle").textContent=title;
+  $("endingText").textContent=text;
+
+  // final stats
+  $("finalStats").innerHTML=`
+    <div class="stat"><div class="k">💵 Final cash</div><div class="v">${money(S.cash)}</div></div>
+    <div class="stat"><div class="k">📊 Profit/loss</div><div class="v ${S.cash-50>=0?"up":"down"}">${money(S.cash-50)}</div></div>
+    <div class="stat"><div class="k">😊 Satisfaction</div><div class="v">${Math.round(S.satisfaction)}</div></div>
+    <div class="stat"><div class="k">🎯 Avg skill</div><div class="v">Lv ${avgSkill.toFixed(1)}</div></div>`;
+
+  drawChart();
+  renderTakeaways();
+}
+
+function drawChart(){
+  const ctx=$("skillChart");
+  if(window._chart) window._chart.destroy();
+  window._chart=new Chart(ctx,{
+    type:"radar",
+    data:{
+      labels:["Pricing","Marketing","Customer Service","Money Mgmt"],
+      datasets:[{
+        label:"Skill level",
+        data:[skillLevel(S.skills.pricing),skillLevel(S.skills.marketing),
+              skillLevel(S.skills.service),skillLevel(S.skills.money)],
+        fill:true,
+        backgroundColor:"rgba(124,58,237,.2)",
+        borderColor:"#7c3aed",
+        pointBackgroundColor:"#2563eb",
+        borderWidth:2,
+      }]
+    },
+    options:{
+      scales:{r:{min:0,max:5,ticks:{stepSize:1,backdropColor:"transparent"},pointLabels:{font:{size:13,weight:"bold"}}}},
+      plugins:{legend:{display:false}},
+      responsive:true,
+    }
+  });
+}
+
+// personalized takeaways from actual choices
+function renderTakeaways(){
+  const t=S.tally;
+  const out=[];
+
+  // pricing
+  if(t.budget>=t.standard && t.budget>=t.premium && t.budget>0)
+    out.push("💲 You leaned on <b>low prices</b> to attract customers. That brings in volume — just keep an eye on your margins so all those sales actually add up to profit.");
+  else if(t.premium>=t.standard && t.premium>=t.budget && t.premium>0)
+    out.push("💲 You favored <b>premium pricing</b> for bigger profit per sale. Smart — as long as customers feel they're getting real value for the higher price.");
+  else
+    out.push("💲 You mixed up your <b>pricing</b> through the summer. Testing different prices is exactly how real businesses find their sweet spot.");
+
+  // marketing
+  const mk=[["word",t.word,"word of mouth — free but powerful when customers love you"],
+            ["flyers",t.flyers,"flyers — paid reach that can pay for itself"],
+            ["online",t.online,"online posts — the biggest reach for a higher cost"],
+            ["skip",t.skip,"skipping marketing to save money"]].sort((a,b)=>b[1]-a[1])[0];
+  out.push("📣 Your go-to marketing was <b>"+mk[2]+"</b>. Reaching customers is half the battle — and you found a style that fit you.");
+
+  // service
+  if(t.generous>t.firm)
+    out.push("🤝 You treated customers <b>generously</b>, even when it cost a little. Loyalty and good reviews often pay you back later.");
+  else if(t.firm>t.generous)
+    out.push("🤝 You <b>protected your profit</b> when customers pushed for deals. That's discipline — just balance it so people still feel cared for.");
+
+  // money / energy
+  if(t.reinvest>t.save)
+    out.push("🏦 You chose to <b>reinvest</b> in growth more than save. Growing capacity can boost sales — pair it with savings for a safety net.");
+  else if(t.save>t.reinvest)
+    out.push("🏦 You were a <b>saver</b>, building a cash cushion. Safe and smart — a little reinvesting can also help your business grow faster.");
+
+  if(t.hustle>=3)
+    out.push("⚡ You <b>hustled hard</b> this summer. Drive is great — just remember rest prevents burnout so you can keep going.");
+  else if(t.rest>=3)
+    out.push("⚡ You valued <b>rest and balance</b>. Pacing yourself is how founders last for the long haul.");
+
+  // keep it to 2–3 most relevant
+  const pick=out.slice(0,3);
+  $("takeaways").innerHTML=pick.map(x=>`<div class="takeaway">${x}</div>`).join("");
+}
+
+/* ============================================================
+   RESTART
+   ============================================================ */
+$("restartBtn").onclick=()=>{
+  $("bizGrid").dataset.sel="";
+  document.querySelectorAll(".biz").forEach(x=>x.classList.remove("sel"));
+  $("bizName").value="";
+  $("startBtn").disabled=true;
+  $("reflectBox").value="";
+  show("screen-intro");
+};
+
+/* ============================================================
+   INIT
+   ============================================================ */
+buildPicker();
+show("screen-intro");
+</script>
+</body>
+</html>
